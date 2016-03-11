@@ -1,0 +1,72 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  3.0.1                                 |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       polyBoundaryMesh;
+    location    "constant/polyMesh";
+    object      boundary;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+6
+(
+    blade
+    {
+        type            wall;
+        inGroups        1(wall);
+        nFaces          300;
+        startFace       56760;
+    }
+    inlet
+    {
+        type            inlet;
+        nFaces          50;
+        startFace       57060;
+        faces           ( ( 22 6 15 31 ) );
+    }
+    outlet
+    {
+        type            outlet;
+        nFaces          170;
+        startFace       57110;
+        faces           ( ( 26 10 9 25 ) ( 27 11 10 26 ) ( 28 12 11 27 ) );
+    }
+    hub
+    {
+        type            empty;
+        inGroups        1(empty);
+        nFaces          57200;
+        startFace       57280;
+    }
+    right_periodic
+    {
+        type            cyclic;
+        inGroups        1(cyclic);
+        nFaces          180;
+        startFace       114480;
+        matchTolerance  0.1;
+        transform       translational;
+        neighbourPatch  left_periodic;
+        separationVector (0 0.02630170594 0);
+    }
+    left_periodic
+    {
+        type            cyclic;
+        inGroups        1(cyclic);
+        nFaces          180;
+        startFace       114660;
+        matchTolerance  0.1;
+        transform       translational;
+        neighbourPatch  right_periodic;
+        separationVector (0 0.02630170594 0);
+    }
+)
+
+// ************************************************************************* //
