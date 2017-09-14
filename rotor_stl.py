@@ -97,7 +97,7 @@ xpts = []
 ypts = []
 zpts = []
 
-#pressure and suction surface splines
+#pressure and suction surface points
 for i in range(len(chords)):
     [cline,p,s] = genNACA65(chords[i],th,camber[i],stagger[i])
     xpts.append([])
@@ -123,125 +123,185 @@ for i in range(len(chords)):
         ypts[-1].append(py)
         zpts[-1].append(pz)
 
-#open stl file for output
-f = file("rotorblade.stl","w")
-f.write("solid rotorblade\n")
-# loop over blades in blade row
-for m in range(n_blades):
-    # calculate angle between blades
-    theta=m*2*pi/n_blades
-    #loop over spanwise profiles
-    for c in range(1,len(xpts)):
-        #loop over profile points
-        for n in range(len(xpts[0])):
-            # rotate points around z-axis (turbomachine axis of symmetry)
-            xs1=xpts[c-1][n-1]*cos(theta)-ypts[c-1][n-1]*sin(theta)
-            ys1=xpts[c-1][n-1]*sin(theta)+ypts[c-1][n-1]*cos(theta)
-            xs2=xpts[c-1][n]*cos(theta)-ypts[c-1][n]*sin(theta)
-            ys2=xpts[c-1][n]*sin(theta)+ypts[c-1][n]*cos(theta)
-            xn1=xpts[c][n-1]*cos(theta)-ypts[c][n-1]*sin(theta)
-            yn1=xpts[c][n-1]*sin(theta)+ypts[c][n-1]*cos(theta)
-            xn2=xpts[c][n]*cos(theta)-ypts[c][n]*sin(theta)
-            yn2=xpts[c][n]*sin(theta)+ypts[c][n]*cos(theta)
-            dx1 = xs2-xs1
-            dx2 = xn1-xs1
-            dy1 = ys2-ys1
-            dy2 = yn1-ys1
-            dz1 = zpts[c-1][n]-zpts[c-1][n-1]
-            dz2 = zpts[c][n-1]-zpts[c-1][n-1]
-            # calculate cross-products of two edges of facet
-            nx = dy1*dz2-dz1*dy2
-            ny = dz2*dx1-dx2*dz1
-            nz = dx1*dy2-dx2*dy1
-            # use cross-product to calculate vector normals
-            vek = sqrt(nx**2+ny**2+nz**2)
-            if(vek!=0):
-                nx/=vek
-                ny/=vek
-                nz/=vek
-            f.write("facet normal "+str(nx)+" "+str(ny)+" "+str(nz)+"\n")
-            f.write("    outer loop\n")
-            f.write("        vertex "+str(xs1)+" "+str(ys1)+" "+str(zpts[c-1][n-1])+"\n")
-            f.write("        vertex "+str(xs2)+" "+str(ys2)+" "+str(zpts[c-1][n])+"\n")
-            f.write("        vertex "+str(xn1)+" "+str(yn1)+" "+str(zpts[c][n-1])+"\n")
-            f.write("    endloop\n")
-            f.write("endfacet\n")
+filename="rotorblade.stl"
+def writeSTLfile(filename,xpts,ypts,zpts,n_blades,hub_gap=False,tip_gap=True):
+    #open stl file for output
+    f = file(filename,"w")
+    f.write("solid rotorblade\n")
+    # loop over blades in blade row
+    for m in range(n_blades):
+        # calculate angle between blades
+        theta=m*2*pi/n_blades
+        #loop over spanwise profiles
+        for c in range(1,len(xpts)):
+            #loop over profile points
+            for n in range(len(xpts[0])):
+                # rotate points around z-axis (turbomachine axis of symmetry)
+                xs1=xpts[c-1][n-1]*cos(theta)-ypts[c-1][n-1]*sin(theta)
+                ys1=xpts[c-1][n-1]*sin(theta)+ypts[c-1][n-1]*cos(theta)
+                xs2=xpts[c-1][n]*cos(theta)-ypts[c-1][n]*sin(theta)
+                ys2=xpts[c-1][n]*sin(theta)+ypts[c-1][n]*cos(theta)
+                xn1=xpts[c][n-1]*cos(theta)-ypts[c][n-1]*sin(theta)
+                yn1=xpts[c][n-1]*sin(theta)+ypts[c][n-1]*cos(theta)
+                xn2=xpts[c][n]*cos(theta)-ypts[c][n]*sin(theta)
+                yn2=xpts[c][n]*sin(theta)+ypts[c][n]*cos(theta)
+                dx1 = xs2-xs1
+                dx2 = xn1-xs1
+                dy1 = ys2-ys1
+                dy2 = yn1-ys1
+                dz1 = zpts[c-1][n]-zpts[c-1][n-1]
+                dz2 = zpts[c][n-1]-zpts[c-1][n-1]
+                # calculate cross-products of two edges of facet
+                nx = dy1*dz2-dz1*dy2
+                ny = dz2*dx1-dx2*dz1
+                nz = dx1*dy2-dx2*dy1
+                # use cross-product to calculate vector normals
+                vek = sqrt(nx**2+ny**2+nz**2)
+                if(vek!=0):
+                    nx/=vek
+                    ny/=vek
+                    nz/=vek
+                f.write("facet normal "+str(nx)+" "+str(ny)+" "+str(nz)+"\n")
+                f.write("    outer loop\n")
+                f.write("        vertex "+str(xs1)+" "+str(ys1)+" "+str(zpts[c-1][n-1])+"\n")
+                f.write("        vertex "+str(xs2)+" "+str(ys2)+" "+str(zpts[c-1][n])+"\n")
+                f.write("        vertex "+str(xn1)+" "+str(yn1)+" "+str(zpts[c][n-1])+"\n")
+                f.write("    endloop\n")
+                f.write("endfacet\n")
 
-            dx1 = xn2-xs2
-            dx2 = xn2-xn1
-            dy1 = yn2-ys2
-            dy2 = yn2-yn1
-            dz1 = zpts[c][n]-zpts[c-1][n]
-            dz2 = zpts[c][n]-zpts[c][n-1]
-            nx = dy1*dz2-dz1*dy2
-            ny = dz2*dx1-dx2*dz1
-            nz = dx1*dy2-dx2*dy1
-            vek = sqrt(nx**2+ny**2+nz**2)
-            if(vek!=0):
-                nx/=vek
-                ny/=vek
-                nz/=vek
-            f.write("facet normal "+str(nx)+" "+str(ny)+" "+str(nz)+"\n")
-            f.write("    outer loop\n")
-            f.write("        vertex "+str(xn1)+" "+str(yn1)+" "+str(zpts[c][n-1])+"\n")
-            f.write("        vertex "+str(xn2)+" "+str(yn2)+" "+str(zpts[c][n])+"\n")
-            f.write("        vertex "+str(xs2)+" "+str(ys2)+" "+str(zpts[c-1][n])+"\n")
-            f.write("    endloop\n")
-            f.write("endfacet\n")
-    # optionally write facets on blade tip
-    if(tip_gap):
-        for n in range(2,len(xpts[-1])/2):
-            xn1=xpts[-1][n-1]*cos(theta)-ypts[-1][n-1]*sin(theta)
-            yn1=xpts[-1][n-1]*sin(theta)+ypts[-1][n-1]*cos(theta)
-            xn2=xpts[-1][n]*cos(theta)-ypts[-1][n]*sin(theta)
-            yn2=xpts[-1][n]*sin(theta)+ypts[-1][n]*cos(theta)
-            xs1=xpts[-1][len(xpts[-1])-n]*cos(theta)-ypts[-1][len(xpts[-1])-n]*sin(theta)
-            ys1=xpts[-1][len(xpts[-1])-n]*sin(theta)+ypts[-1][len(xpts[-1])-n]*cos(theta)
-            xs2=xpts[-1][len(xpts[-1])-n+1]*cos(theta)-ypts[-1][len(xpts[-1])-n+1]*sin(theta)
-            ys2=xpts[-1][len(xpts[-1])-n+1]*sin(theta)+ypts[-1][len(xpts[-1])-n+1]*cos(theta)
+                dx1 = xs2-xn2
+                dx2 = xn1-xn2
+                dy1 = ys2-yn2
+                dy2 = yn1-yn2
+                dz1 = zpts[c][n]-zpts[c-1][n]
+                dz2 = zpts[c][n]-zpts[c][n-1]
+                nx = dy1*dz2-dz1*dy2
+                ny = dz2*dx1-dx2*dz1
+                nz = dx1*dy2-dx2*dy1
+                vek = sqrt(nx**2+ny**2+nz**2)
+                if(vek!=0):
+                    nx/=vek
+                    ny/=vek
+                    nz/=vek
+                f.write("facet normal "+str(nx)+" "+str(ny)+" "+str(nz)+"\n")
+                f.write("    outer loop\n")
+                f.write("        vertex "+str(xn2)+" "+str(yn2)+" "+str(zpts[c][n])+"\n")
+                f.write("        vertex "+str(xn1)+" "+str(yn1)+" "+str(zpts[c][n-1])+"\n")
+                f.write("        vertex "+str(xs2)+" "+str(ys2)+" "+str(zpts[c-1][n])+"\n")
+                f.write("    endloop\n")
+                f.write("endfacet\n")
+        # optionally write facets on blade hub
+        if(hub_gap):
+            for n in range(2,len(xpts[-1])/2):
+                xn1=xpts[0][n-1]*cos(theta)-ypts[0][n-1]*sin(theta)
+                yn1=xpts[0][n-1]*sin(theta)+ypts[0][n-1]*cos(theta)
+                xn2=xpts[0][n]*cos(theta)-ypts[0][n]*sin(theta)
+                yn2=xpts[0][n]*sin(theta)+ypts[0][n]*cos(theta)
+                xs1=xpts[0][len(xpts[0])-n]*cos(theta)-ypts[0][len(xpts[0])-n]*sin(theta)
+                ys1=xpts[0][len(xpts[0])-n]*sin(theta)+ypts[0][len(xpts[0])-n]*cos(theta)
+                xs2=xpts[0][len(xpts[0])-n+1]*cos(theta)-ypts[0][len(xpts[0])-n+1]*sin(theta)
+                ys2=xpts[0][len(xpts[0])-n+1]*sin(theta)+ypts[0][len(xpts[0])-n+1]*cos(theta)
 
-            dx1 = xs2-xs1
-            dx2 = xn1-xs1
-            dy1 = ys2-ys1
-            dy2 = yn1-ys1
-            dz1 = zpts[-1][n]-zpts[-1][n-1]
-            dz2 = zpts[-1][n]-zpts[-1][n-1]
-            nx = dy1*dz2-dz1*dy2
-            ny = dz2*dx1-dx2*dz1
-            nz = dx1*dy2-dx2*dy1
-            vek = sqrt(nx**2+ny**2+nz**2)
-            if(vek!=0):
-                nx/=vek
-                ny/=vek
-                nz/=vek
-            f.write("facet normal "+str(nx)+" "+str(ny)+" "+str(nz)+"\n")
-            f.write("    outer loop\n")
-            f.write("        vertex "+str(xs1)+" "+str(ys1)+" "+str(zpts[-1][len(xpts[-1])-n])+"\n")
-            f.write("        vertex "+str(xs2)+" "+str(ys2)+" "+str(zpts[-1][len(xpts[-1])-n+1])+"\n")
-            f.write("        vertex "+str(xn1)+" "+str(yn1)+" "+str(zpts[-1][n-1])+"\n")
-            f.write("    endloop\n")
-            f.write("endfacet\n")
+                dx1 = xs2-xs1
+                dx2 = xn1-xs1
+                dy1 = ys2-ys1
+                dy2 = yn1-ys1
+                dz1 = zpts[0][n]-zpts[0][n-1]
+                dz2 = zpts[0][n]-zpts[0][n-1]
+                nx = dy1*dz2-dz1*dy2
+                ny = dz2*dx1-dx2*dz1
+                nz = dx1*dy2-dx2*dy1
+                vek = sqrt(nx**2+ny**2+nz**2)
+                if(vek!=0):
+                    nx/=vek
+                    ny/=vek
+                    nz/=vek
+                f.write("facet normal "+str(nx)+" "+str(ny)+" "+str(nz)+"\n")
+                f.write("    outer loop\n")
+                f.write("        vertex "+str(xs1)+" "+str(ys1)+" "+str(zpts[0][len(xpts[0])-n])+"\n")
+                f.write("        vertex "+str(xs2)+" "+str(ys2)+" "+str(zpts[0][len(xpts[0])-n+1])+"\n")
+                f.write("        vertex "+str(xn1)+" "+str(yn1)+" "+str(zpts[0][n-1])+"\n")
+                f.write("    endloop\n")
+                f.write("endfacet\n")
 
-            dx1 = xn2-xs2
-            dx2 = xn2-xn1
-            dy1 = yn2-ys2
-            dy2 = yn2-yn1
-            dz1 = zpts[-1][n]-zpts[-1][n]
-            dz2 = zpts[-1][n]-zpts[-1][n]
-            nx = dy1*dz2-dz1*dy2
-            ny = dz2*dx1-dx2*dz1
-            nz = dx1*dy2-dx2*dy1
-            vek = sqrt(nx**2+ny**2+nz**2)
-            if(vek!=0):
-                nx/=vek
-                ny/=vek
-                nz/=vek
-            f.write("facet normal "+str(nx)+" "+str(ny)+" "+str(nz)+"\n")
-            f.write("    outer loop\n")
-            f.write("        vertex "+str(xn1)+" "+str(yn1)+" "+str(zpts[-1][n-1])+"\n")
-            f.write("        vertex "+str(xn2)+" "+str(yn2)+" "+str(zpts[-1][n])+"\n")
-            f.write("        vertex "+str(xs1)+" "+str(ys1)+" "+str(zpts[-1][len(xpts[-1])-n])+"\n")
-            f.write("    endloop\n")
-            f.write("endfacet\n")
-f.write("endsolid rotorblade\n")
-f.close()
+                dx1 = xn2-xs2
+                dx2 = xn2-xn1
+                dy1 = yn2-ys2
+                dy2 = yn2-yn1
+                dz1 = zpts[0][n]-zpts[0][n]
+                dz2 = zpts[0][n]-zpts[0][n]
+                nx = dy1*dz2-dz1*dy2
+                ny = dz2*dx1-dx2*dz1
+                nz = dx1*dy2-dx2*dy1
+                vek = sqrt(nx**2+ny**2+nz**2)
+                if(vek!=0):
+                    nx/=vek
+                    ny/=vek
+                    nz/=vek
+                f.write("facet normal "+str(nx)+" "+str(ny)+" "+str(nz)+"\n")
+                f.write("    outer loop\n")
+                f.write("        vertex "+str(xn1)+" "+str(yn1)+" "+str(zpts[0][n-1])+"\n")
+                f.write("        vertex "+str(xn2)+" "+str(yn2)+" "+str(zpts[0][n])+"\n")
+                f.write("        vertex "+str(xs1)+" "+str(ys1)+" "+str(zpts[0][len(xpts[0])-n])+"\n")
+                f.write("    endloop\n")
+                f.write("endfacet\n")
+
+        # optionally write facets on blade tip
+        if(tip_gap):
+            for n in range(2,len(xpts[-1])/2):
+                xn1=xpts[-1][n-1]*cos(theta)-ypts[-1][n-1]*sin(theta)
+                yn1=xpts[-1][n-1]*sin(theta)+ypts[-1][n-1]*cos(theta)
+                xn2=xpts[-1][n]*cos(theta)-ypts[-1][n]*sin(theta)
+                yn2=xpts[-1][n]*sin(theta)+ypts[-1][n]*cos(theta)
+                xs1=xpts[-1][len(xpts[-1])-n]*cos(theta)-ypts[-1][len(xpts[-1])-n]*sin(theta)
+                ys1=xpts[-1][len(xpts[-1])-n]*sin(theta)+ypts[-1][len(xpts[-1])-n]*cos(theta)
+                xs2=xpts[-1][len(xpts[-1])-n+1]*cos(theta)-ypts[-1][len(xpts[-1])-n+1]*sin(theta)
+                ys2=xpts[-1][len(xpts[-1])-n+1]*sin(theta)+ypts[-1][len(xpts[-1])-n+1]*cos(theta)
+
+                dx1 = xs2-xs1
+                dx2 = xn1-xs1
+                dy1 = ys2-ys1
+                dy2 = yn1-ys1
+                dz1 = zpts[-1][n]-zpts[-1][n-1]
+                dz2 = zpts[-1][n]-zpts[-1][n-1]
+                nx = dy1*dz2-dz1*dy2
+                ny = dz2*dx1-dx2*dz1
+                nz = dx1*dy2-dx2*dy1
+                vek = sqrt(nx**2+ny**2+nz**2)
+                if(vek!=0):
+                    nx/=vek
+                    ny/=vek
+                    nz/=vek
+                f.write("facet normal "+str(nx)+" "+str(ny)+" "+str(nz)+"\n")
+                f.write("    outer loop\n")
+                f.write("        vertex "+str(xs1)+" "+str(ys1)+" "+str(zpts[-1][len(xpts[-1])-n])+"\n")
+                f.write("        vertex "+str(xs2)+" "+str(ys2)+" "+str(zpts[-1][len(xpts[-1])-n+1])+"\n")
+                f.write("        vertex "+str(xn1)+" "+str(yn1)+" "+str(zpts[-1][n-1])+"\n")
+                f.write("    endloop\n")
+                f.write("endfacet\n")
+
+                dx1 = xn2-xs2
+                dx2 = xn2-xn1
+                dy1 = yn2-ys2
+                dy2 = yn2-yn1
+                dz1 = zpts[-1][n]-zpts[-1][n]
+                dz2 = zpts[-1][n]-zpts[-1][n]
+                nx = dy1*dz2-dz1*dy2
+                ny = dz2*dx1-dx2*dz1
+                nz = dx1*dy2-dx2*dy1
+                vek = sqrt(nx**2+ny**2+nz**2)
+                if(vek!=0):
+                    nx/=vek
+                    ny/=vek
+                    nz/=vek
+                f.write("facet normal "+str(nx)+" "+str(ny)+" "+str(nz)+"\n")
+                f.write("    outer loop\n")
+                f.write("        vertex "+str(xn1)+" "+str(yn1)+" "+str(zpts[-1][n-1])+"\n")
+                f.write("        vertex "+str(xn2)+" "+str(yn2)+" "+str(zpts[-1][n])+"\n")
+                f.write("        vertex "+str(xs1)+" "+str(ys1)+" "+str(zpts[-1][len(xpts[-1])-n])+"\n")
+                f.write("    endloop\n")
+                f.write("endfacet\n")
+    f.write("endsolid rotorblade\n")
+    f.close()
+
+writeSTLfile(filename,xpts,ypts,zpts,n_blades,tip_gap=True,hub_gap=True)

@@ -108,6 +108,47 @@ def read_ps_profile(datafilename,c,alpha,delimiter=","):
     datafile.close()
     return [pressure, suction]
 
+""" This function reads in profile data in xfoil format, but is otherwise
+    identical to the one above """
+def read_xfoil_profile(datafilename,c,alpha,delimiter=" "):
+    alpha_rad = -alpha*pi/180.0
+    i = -1
+    pressure = [[],[]]
+    suction = [[],[]]
+    minx = 10.0 # initialise minimum with an unrealistically large value
+    suction = False
+    datafile = file(datafilename,"r")
+    for line in datafile:
+        data = split(line,delimiter)
+        if(len(data)>0):
+            # ignore lines starting with non-numeric characters
+            if(not data[0][0] in "0123456789."):
+                continue
+            i+=1
+            if(minx>float(data[0])):
+                minx=float(data[0])
+                #suction = False
+                pressure[0].insert(0,(float(data[0])-0.5)*c)
+                pressure[1].insert(0,float(data[1])*c)
+                # rotate pressure surface
+                px = pressure[0][0]*cos(alpha_rad)-pressure[1][0]*sin(alpha_rad)
+                py = pressure[0][0]*sin(alpha_rad)+pressure[1][0]*cos(alpha_rad)
+                pressure[0][0] = px
+                pressure[1][0] = py
+
+            else:
+                #suction=True
+                suction[0].append((float(data[0])-0.5)*c)
+                suction[1].append(float(data[1])*c)
+                # rotate suction surface
+                sx = suction[0][i]*cos(alpha_rad)-suction[1][i]*sin(alpha_rad)
+                sy = suction[0][i]*sin(alpha_rad)+suction[1][i]*cos(alpha_rad)
+                suction[0][i] = sx
+                suction[1][i] = sy 
+    datafile.close()
+    return [pressure, suction]
+
+
 # Write a blockMesh file to the constant/polymesh directory of specified case
 # usage: write_blockmesh(case,threed,blunt_te,span_c,chords,stack,sweep,dihedral,p,s,
 #    farfield=5.0,grid_r=60,grid_c=40, grid_s=8,grid_le=50,grid_w=60,
