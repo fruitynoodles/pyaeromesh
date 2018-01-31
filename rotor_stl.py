@@ -86,7 +86,8 @@ hub_gap = False # set to False if there is no hub gap
 
 rad = [0.148,0.165,0.180,0.195,0.2095]
 #rad = [0.150,0.165,0.180,0.195,0.21]
-chords = [0.03,0.03,0.03,0.03,0.03]
+#chords = [0.03,0.03,0.03,0.03,0.03]
+chords = [0.1,0.1,0.08,0.06,0.03]
 camber = [31.04,23.48,17.93,13.85,10.90]
 stagger = [38.0,45.0,49.40,53.00,56.10]
 
@@ -124,7 +125,10 @@ for i in range(len(chords)):
         zpts[-1].append(pz)
 
 filename="rotorblade.stl"
-def writeSTLfile(filename,xpts,ypts,zpts,n_blades,hub_gap=False,tip_gap=True):
+def writeSTLfile(filename,xpts,ypts,zpts,n_blades,hub_gap=False,tip_gap=True,clockwise=True):
+    cw = 1.0
+    if(not clockwise):
+        cw = -1.0
     #open stl file for output
     f = file(filename,"w")
     f.write("solid rotorblade\n")
@@ -136,15 +140,16 @@ def writeSTLfile(filename,xpts,ypts,zpts,n_blades,hub_gap=False,tip_gap=True):
         for c in range(1,len(xpts)):
             #loop over profile points
             for n in range(len(xpts[0])):
-                # rotate points around z-axis (turbomachine axis of symmetry)
-                xs1=xpts[c-1][n-1]*cos(theta)-ypts[c-1][n-1]*sin(theta)
+                # optionally rotate points around z-axis (turbomachine axis of symmetry)
+                xs1=cw*(xpts[c-1][n-1]*cos(theta)-ypts[c-1][n-1]*sin(theta))
                 ys1=xpts[c-1][n-1]*sin(theta)+ypts[c-1][n-1]*cos(theta)
-                xs2=xpts[c-1][n]*cos(theta)-ypts[c-1][n]*sin(theta)
+                xs2=cw*(xpts[c-1][n]*cos(theta)-ypts[c-1][n]*sin(theta))
                 ys2=xpts[c-1][n]*sin(theta)+ypts[c-1][n]*cos(theta)
-                xn1=xpts[c][n-1]*cos(theta)-ypts[c][n-1]*sin(theta)
+                xn1=cw*(xpts[c][n-1]*cos(theta)-ypts[c][n-1]*sin(theta))
                 yn1=xpts[c][n-1]*sin(theta)+ypts[c][n-1]*cos(theta)
-                xn2=xpts[c][n]*cos(theta)-ypts[c][n]*sin(theta)
+                xn2=cw*(xpts[c][n]*cos(theta)-ypts[c][n]*sin(theta))
                 yn2=xpts[c][n]*sin(theta)+ypts[c][n]*cos(theta)
+
                 dx1 = xs2-xs1
                 dx2 = xn1-xs1
                 dy1 = ys2-ys1
@@ -193,13 +198,13 @@ def writeSTLfile(filename,xpts,ypts,zpts,n_blades,hub_gap=False,tip_gap=True):
         # optionally write facets on blade hub
         if(hub_gap):
             for n in range(2,len(xpts[-1])/2):
-                xn1=xpts[0][n-1]*cos(theta)-ypts[0][n-1]*sin(theta)
+                xn1=cw*(xpts[0][n-1]*cos(theta)-ypts[0][n-1]*sin(theta))
                 yn1=xpts[0][n-1]*sin(theta)+ypts[0][n-1]*cos(theta)
-                xn2=xpts[0][n]*cos(theta)-ypts[0][n]*sin(theta)
+                xn2=cw*(xpts[0][n]*cos(theta)-ypts[0][n]*sin(theta))
                 yn2=xpts[0][n]*sin(theta)+ypts[0][n]*cos(theta)
-                xs1=xpts[0][len(xpts[0])-n]*cos(theta)-ypts[0][len(xpts[0])-n]*sin(theta)
+                xs1=cw*(xpts[0][len(xpts[0])-n]*cos(theta)-ypts[0][len(xpts[0])-n]*sin(theta))
                 ys1=xpts[0][len(xpts[0])-n]*sin(theta)+ypts[0][len(xpts[0])-n]*cos(theta)
-                xs2=xpts[0][len(xpts[0])-n+1]*cos(theta)-ypts[0][len(xpts[0])-n+1]*sin(theta)
+                xs2=cw*(xpts[0][len(xpts[0])-n+1]*cos(theta)-ypts[0][len(xpts[0])-n+1]*sin(theta))
                 ys2=xpts[0][len(xpts[0])-n+1]*sin(theta)+ypts[0][len(xpts[0])-n+1]*cos(theta)
 
                 dx1 = xs2-xs1
@@ -249,13 +254,13 @@ def writeSTLfile(filename,xpts,ypts,zpts,n_blades,hub_gap=False,tip_gap=True):
         # optionally write facets on blade tip
         if(tip_gap):
             for n in range(2,len(xpts[-1])/2):
-                xn1=xpts[-1][n-1]*cos(theta)-ypts[-1][n-1]*sin(theta)
+                xn1=cw*(xpts[-1][n-1]*cos(theta)-ypts[-1][n-1]*sin(theta))
                 yn1=xpts[-1][n-1]*sin(theta)+ypts[-1][n-1]*cos(theta)
-                xn2=xpts[-1][n]*cos(theta)-ypts[-1][n]*sin(theta)
+                xn2=cw*(xpts[-1][n]*cos(theta)-ypts[-1][n]*sin(theta))
                 yn2=xpts[-1][n]*sin(theta)+ypts[-1][n]*cos(theta)
-                xs1=xpts[-1][len(xpts[-1])-n]*cos(theta)-ypts[-1][len(xpts[-1])-n]*sin(theta)
+                xs1=cw*(xpts[-1][len(xpts[-1])-n]*cos(theta)-ypts[-1][len(xpts[-1])-n]*sin(theta))
                 ys1=xpts[-1][len(xpts[-1])-n]*sin(theta)+ypts[-1][len(xpts[-1])-n]*cos(theta)
-                xs2=xpts[-1][len(xpts[-1])-n+1]*cos(theta)-ypts[-1][len(xpts[-1])-n+1]*sin(theta)
+                xs2=cw*(xpts[-1][len(xpts[-1])-n+1]*cos(theta)-ypts[-1][len(xpts[-1])-n+1]*sin(theta))
                 ys2=xpts[-1][len(xpts[-1])-n+1]*sin(theta)+ypts[-1][len(xpts[-1])-n+1]*cos(theta)
 
                 dx1 = xs2-xs1
@@ -304,4 +309,4 @@ def writeSTLfile(filename,xpts,ypts,zpts,n_blades,hub_gap=False,tip_gap=True):
     f.write("endsolid rotorblade\n")
     f.close()
 
-writeSTLfile(filename,xpts,ypts,zpts,n_blades,tip_gap=True,hub_gap=True)
+writeSTLfile(filename,xpts,ypts,zpts,n_blades,tip_gap=True,hub_gap=True,clockwise=False)
