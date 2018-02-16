@@ -94,37 +94,51 @@ stagger = [38.0,45.0,49.40,53.00,56.10]
 farfield = 0.0 #number of chord lengths to farfield boundary
 xoff = farfield
 yoff = 0
-xpts = []
-ypts = []
-zpts = []
 
 #pressure and suction surface points
-for i in range(len(chords)):
-    [cline,p,s] = genNACA65(chords[i],th,camber[i],stagger[i])
-    xpts.append([])
-    ypts.append([])
-    zpts.append([])
-    # suction surfaces
-    for n in range(0,len(s[0])):
-        theta = s[1][n]/rad[i]
-        px = rad[i]*sin(theta)
-        py = rad[i]*cos(theta)
-        pz = xoff+s[0][n]
-        xpts[-1].append(px)
-        ypts[-1].append(py)
-        zpts[-1].append(pz)
+def gen3Dprofiles(chords,th,camber,stagger,xoff=0.0,yoff=0.0,curved_profiles=True):
+    xpts = []
+    ypts = []
+    zpts = []
+    for i in range(len(chords)):
+        [cline,p,s] = genNACA65(chords[i],th,camber[i],stagger[i])
+        xpts.append([])
+        ypts.append([])
+        zpts.append([])
+        # suction surfaces
+        for n in range(0,len(s[0])):
+            if(curved_profiles):
+                theta = s[1][n]/rad[i]
+                px = rad[i]*sin(theta)
+                py = rad[i]*cos(theta)
+                pz = xoff+s[0][n]
+                xpts[-1].append(px)
+                ypts[-1].append(py)
+                zpts[-1].append(pz)
+            else:
+                xpts[-1].append(p[1][n])
+                ypts[-1].append(rad[i])
+                zpts[-1].append(xoff+s[0][n])
 
-    # pressure surfaces
-    for n in range(len(p[0])-1,-1,-1):
-        theta = p[1][n]/rad[i]
-        px = rad[i]*sin(theta)
-        py = rad[i]*cos(theta)
-        pz = xoff+p[0][n]
-        xpts[-1].append(px)
-        ypts[-1].append(py)
-        zpts[-1].append(pz)
+        # pressure surfaces
+        for n in range(len(p[0])-1,-1,-1):
+            if(curved_profiles):
+                theta = p[1][n]/rad[i]
+                px = rad[i]*sin(theta)
+                py = rad[i]*cos(theta)
+                pz = xoff+p[0][n]
+                xpts[-1].append(px)
+                ypts[-1].append(py)
+                zpts[-1].append(pz)
+            else:
+                xpts[-1].append(s[1][n])
+                ypts[-1].append(rad[i])
+                zpts[-1].append(xoff+s[0][n])
+    return [xpts,ypts,zpts]
 
+[xpts,ypts,zpts] = gen3Dprofiles(chords,th,camber,stagger,curved_profiles=False)
 filename="rotorblade.stl"
+
 def writeSTLfile(filename,xpts,ypts,zpts,n_blades,hub_gap=False,tip_gap=True,clockwise=True):
     cw = 1.0
     if(not clockwise):
