@@ -44,8 +44,8 @@ def genNACA65(c,t_c,theta,gamma):
     suction = [[],[]]
     pressure = [[],[]]
     # generate geometery with chord line parallel with x-axis
-    r = c/2.0/sin(theta_rad/2.0) # camber line arc radius
-    ycentre = c/2.0/tan(theta_rad/2.0) #distance between chord and camber center
+    r = c/2.0/sin(abs(theta_rad/2.0)) # camber line arc radius
+    ycentre = c/2.0/tan(abs(theta_rad/2.0)) #distance between chord and camber center
     for i in range(len(C_frac)):
         x = c*C_frac[i]
             # calculate camber line coordinates
